@@ -1,4 +1,6 @@
 import pandas as pd
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import smtplib
 import ssl
 
@@ -18,28 +20,35 @@ ticket_medio = faturamento['Valor final'] / num_vendas['Quantidade'].to_frame()
 print(ticket_medio)
 
 #enviar um email com o relatório de vendas
-port = 587
-
-smtp_remetente = "smtp-mail.outlook.com"
-
-remetente = "teste.codigopy@outlook.com"
-
-destinatario = "loja.amazing.things@gmail.com"
-
-senha_remetente = "codigopy.1"
-
-mensagem = """
-
-Subject: mensagem teste
-
+port = 587 #é a porta para usar o outlook
+server = "smtp-mail.outlook.com"
+De = "coloque-seu-email@outlook.com"
+Para = "coloque-o-email-de-quem-vai-receber@gmail.com"
+senha = "coloque a senha do seu email"
+msg = MIMEMultipart()
+html_message = f"""
+<p>Prezado(a),</p>
+<p>Segue abaixo o relatório de vendas de cada loja.</p>
+<p>Faturamento:</p>
+{faturamento.to_html()}
+<p>Quantidade vendida:</p>
+{num_vendas.to_html()}
+<p>Ticket Médio:</p>
+{ticket_medio.to_html()}
+<p>Atte.</p>
 """
 
-SSL_context = ssl.create_default_context()
+msg['From']= De
+msg['To']= Para
+msg['Subject']="Relatório de Vendas"
+msg.attach(MIMEText(html_message, "html"))
+text = msg.as_string()
+SSLcontext = ssl.create_default_context()
 
-with smtplib.SMTP(smtp_remetente, port) as server:
+with smtplib.SMTP(server, port) as server:
 
-    server.starttls(context=SSL_context)
+    server.starttls(context=SSLcontext)
 
-    server.login(remetente,senha_remetente)
+    server.login(De, senha)
 
-    server.sendmail(remetente, destinatario, mensagem)
+    server.sendmail(De, Para, text)
